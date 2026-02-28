@@ -1,0 +1,47 @@
+efficient-time-management-system/
+│
+├── frontend/             # ReactJS + Tailwind + Chart.js + FullCalendar
+│   ├── public/            # favicon, manifest, logo,...
+│   ├── src/
+│   │   ├── assets/        # Ảnh, icon, font, video,...
+│   │   ├── components/    # Component tái sử dụng (Navbar, Button,...)
+│   │   ├── pages/         # Các trang chính (Dashboard, Calendar, Report,...)
+│   │   ├── layouts/       # Layout tổng thể (MainLayout, AuthLayout,...)
+│   │   ├── hooks/         # Custom hook (useLocalStorage, useFetch,...)
+│   │   ├── context/       # React Context (AuthContext, ThemeContext,...)
+│   │   ├── services/      # Giao tiếp API với backend (axios)
+│   │   ├── utils/         # Hàm tiện ích chung (formatDate, validateForm,...)
+│   │   ├── constants/     # Biến hằng số, endpoint API, config hệ thống
+│   │   ├── styles/        # File CSS/tailwind mở rộng
+│   │   ├── router/        # Định tuyến (react-router-dom)
+│   │   ├── App.jsx
+│   │   └── main.jsx
+│   ├── .env               # URL API, config public key
+│   ├── package.json
+│   ├── vite.config.js
+│   └── tailwind.config.js
+│
+├── backend/              # NodeJS + Express + MongoDB/SQL
+│   ├── src/
+│   │   ├── config/        # Cấu hình (db.js, dotenv, logger,...)
+│   │   ├── controllers/   # Xử lý logic nghiệp vụ (UserController,...)
+│   │   ├── models/        # Mongoose Schema / Sequelize Models
+│   │   ├── routes/        # Định tuyến API (userRoutes,...)
+│   │   ├── middleware/    # Xác thực, phân quyền, log request,...
+│   │   ├── services/      # Xử lý phức tạp (gọi API ngoài, thuật toán,...)
+│   │   ├── utils/         # Hàm tiện ích chung
+│   │   ├── uploads/       # Ảnh, file được người dùng upload (nếu có)
+│   │   ├── tests/         # Test đơn vị
+│   │   └── app.js
+│   ├── .env
+│   ├── package.json
+│   └── server.js
+│
+└── algorithm/             # FastAPI + ortools + pulp
+    ├── scheduler/         # Bộ giải thuật (optimizer.py, constraints.py,...)
+    ├── models/            # Model dữ liệu đầu vào/đầu ra
+    ├── services/          # Logic xử lý chính, kết nối backend
+    ├── utils/             # Hàm hỗ trợ (convert data, validate,...)
+    ├── main.py            # API chính
+    ├── requirements.txt
+    └── README.md
