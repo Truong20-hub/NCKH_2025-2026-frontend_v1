@@ -1,9 +1,14 @@
 // src/App.jsx
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+
 import Layout from "./components/Layout.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
+
+import Login from "./pages/login.jsx";
+import Register from "./pages/Register.jsx";
+
 import Dashboard from "./pages/Dashboard.jsx";
 import Profile from "./pages/Profile.jsx";
-
 import GoalsConfig from "./pages/GoalsConfig.jsx";
 import Projects from "./pages/Projects.jsx";
 import CalendarView from "./pages/CalendarView.jsx";
@@ -11,16 +16,26 @@ import Announce from "./pages/Announce.jsx";
 import CreateProject from "./pages/AddProject.jsx";
 import ProjectDetail from "./pages/projectDetail.jsx";
 import SettingsPage from "./pages/setting.jsx";
+
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Route cha là Layout */}
-        <Route path="/" element={<Layout />}>
-          {/* Các Route con sẽ hiển thị tại vị trí <Outlet /> trong Layout */}
+        {/* AUTH */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+
+        {/* PROTECTED ROUTE */}
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <Layout />
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<Dashboard />} />
           <Route path="profile" element={<Profile />} />
-          {/* Ví dụ các trang tiếp theo */}
           <Route path="goals" element={<GoalsConfig />} />
           <Route path="projects" element={<Projects />} />
           <Route path="calendar" element={<CalendarView />} />
@@ -30,8 +45,8 @@ function App() {
           <Route path="settings" element={<SettingsPage />} />
         </Route>
 
-        {/* Chuyển hướng nếu vào link lạ */}
-        <Route path="*" element={<Navigate to="/" />} />
+        {/* Route lạ */}
+        <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
     </BrowserRouter>
   );

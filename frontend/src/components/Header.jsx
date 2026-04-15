@@ -2,6 +2,7 @@ import React from "react";
 import { Search, Bell, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import NofigationChild from "../pages/nofigationChild";
+import LoginChild from "../pages/loginChild";
 
 const Header = () => {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
@@ -34,7 +35,7 @@ const Header = () => {
           )}
         </button>
 
-        <div className="flex items-center gap-3 pl-4 border-l border-gray-200 cursor-pointer group">
+        <div className="flex items-center gap-3 pl-4 border-l border-gray-200 cursor-pointer group relative">
           <div className="text-right hidden sm:block">
             <p className="text-sm font-bold text-gray-800 group-hover:text-blue-600">
               Alex Miller
@@ -48,6 +49,7 @@ const Header = () => {
             />
           </div>
           <ChevronDown size={16} className="text-gray-400" />
+          <LoginChild className="absolute border-2 border-black right-0 top-10" />
         </div>
         {/* trang thông báo tóm tắt */}
       </div>

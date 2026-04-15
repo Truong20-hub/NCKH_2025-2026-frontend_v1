@@ -1,6 +1,57 @@
-import { Sparkles, Mic, Send, X } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { Sparkles, Mic, Send, X, Loader2 } from "lucide-react";
 
 const ChatBox = ({ onClose }) => {
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef(null);
+
+  // Tự động cuộn xuống cuối danh sách tin nhắn
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isLoading]);
+
+  const handleSend = async (text) => {
+    const messageToSend = typeof text === "string" ? text : input;
+    if (!messageToSend.trim() || isLoading) return;
+
+    // Thêm tin nhắn của người dùng vào UI
+    const userMsg = { role: "user", content: messageToSend };
+    setMessages((prev) => [...prev, userMsg]);
+    setInput("");
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("http://localhost:5000/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: messageToSend }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", content: data.reply },
+        ]);
+      } else {
+        throw new Error(data.error || "Không thể kết nối AI");
+      }
+    } catch (error) {
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: "Lỗi: " + error.message },
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="fixed bottom-28 right-6 w-[360px] h-[640px] rounded-3xl overflow-hidden shadow-2xl border border-purple-900/40 bg-gradient-to-b from-[#1a1325] to-[#120c1c] text-white flex flex-col">
       {/* HEADER */}
@@ -24,56 +75,84 @@ const ChatBox = ({ onClose }) => {
       </div>
 
       {/* BODY */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
-        {/* ICON */}
-        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-[0_0_60px_rgba(139,92,246,0.6)] mb-6">
-          <div className="w-6 h-6 border-l-4 border-r-4 border-white animate-pulse"></div>
-        </div>
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide">
+        {messages.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-center px-4">
+            {/* ICON */}
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-[0_0_40px_rgba(139,92,246,0.4)] mb-6">
+              <div className="w-5 h-5 border-l-4 border-r-4 border-white animate-pulse"></div>
+            </div>
 
-        {/* TEXT */}
-        <h2 className="text-xl font-bold mb-2 leading-snug">
-          Chào bạn, tôi có thể giúp gì cho lịch trình hôm nay?
-        </h2>
+            <h2 className="text-lg font-bold mb-2">
+              Chào bạn, tôi có thể giúp gì cho lịch trình hôm nay?
+            </h2>
 
-        <p className="text-sm text-purple-200 mb-6">
-          Tôi có thể giúp bạn sắp xếp cuộc họp, tóm tắt dữ liệu hoặc tối ưu hóa
-          công việc của bạn.
-        </p>
+            <p className="text-xs text-purple-200 mb-6">
+              Tôi có thể giúp bạn sắp xếp cuộc họp hoặc tối ưu hóa công việc.
+            </p>
 
-        {/* QUICK ACTION */}
-        <div className="flex flex-wrap gap-3 justify-center mb-6">
-          {["Tóm tắt dự án", "Tìm thời gian rảnh", "Tối ưu hóa mục tiêu"].map(
-            (item, i) => (
-              <button
-                key={i}
-                className="px-4 py-2 rounded-full text-sm bg-purple-800/40 border border-purple-500/30 hover:bg-purple-700/40 transition"
+            {/* QUICK ACTION */}
+            <div className="flex flex-wrap gap-2 justify-center mb-6">
+              {["Tóm tắt dự án", "Tìm thời gian rảnh", "Gợi ý mục tiêu"].map(
+                (item, i) => (
+                  <button
+                    key={i}
+                    onClick={() => handleSend(item)}
+                    className="px-3 py-1.5 rounded-full text-xs bg-purple-800/40 border border-purple-500/30 hover:bg-purple-700/40 transition"
+                  >
+                    {item}
+                  </button>
+                ),
+              )}
+            </div>
+          </div>
+        ) : (
+          messages.map((msg, index) => (
+            <div
+              key={index}
+              className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+            >
+              <div
+                className={`max-w-[85%] px-4 py-2 rounded-2xl text-sm ${
+                  msg.role === "user"
+                    ? "bg-purple-600 text-white rounded-tr-none"
+                    : "bg-white/10 text-purple-100 border border-white/10 rounded-tl-none"
+                }`}
               >
-                {item}
-              </button>
-            ),
-          )}
-        </div>
-
-        {/* TIP */}
-        <div className="w-full rounded-2xl border border-purple-500/20 bg-purple-900/30 p-4 text-left">
-          <p className="font-semibold text-purple-300 mb-1">Mẹo hôm nay</p>
-          <p className="text-sm text-purple-200">
-            Hãy sử dụng "Focus Mode" để tăng 40% hiệu suất.
-          </p>
-        </div>
+                {msg.content}
+              </div>
+            </div>
+          ))
+        )}
+        {isLoading && (
+          <div className="flex justify-start">
+            <div className="bg-white/5 px-4 py-2 rounded-2xl flex items-center gap-2">
+              <Loader2 size={14} className="animate-spin text-purple-400" />
+              <span className="text-xs text-purple-300">Đang suy nghĩ...</span>
+            </div>
+          </div>
+        )}
+        <div ref={messagesEndRef} />
       </div>
 
       {/* INPUT */}
       <div className="p-4 border-t border-white/10 bg-black/20">
         <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-full px-4 py-3 backdrop-blur">
           <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSend()}
             placeholder="Nhập yêu cầu của bạn tại đây..."
             className="flex-1 bg-transparent outline-none text-sm placeholder:text-purple-300"
           />
 
           <Mic size={18} className="text-purple-300 cursor-pointer" />
 
-          <button className="w-9 h-9 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 flex items-center justify-center hover:scale-105 transition">
+          <button
+            onClick={handleSend}
+            disabled={isLoading}
+            className="w-9 h-9 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 flex items-center justify-center hover:scale-105 transition disabled:opacity-50"
+          >
             <Send size={16} />
           </button>
         </div>
