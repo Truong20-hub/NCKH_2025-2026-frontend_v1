@@ -12,4 +12,6 @@ router.put('/:id', controller.update);
 // Xóa theo ID
 router.delete('/:id', controller.delete);
 
+router.get("/user/:userId", controller.getProjectsByUser);
+
 module.exports = router;
