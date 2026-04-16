@@ -20,8 +20,21 @@ const CreateProject = () => {
   // 2. Hàm gửi dữ liệu về Backend
   const handleSubmit = async () => {
     try {
-      // Gọi đến API do tool C# của bạn gen ra
-      const response = await axios.post("http://localhost:3000/api/duan", project);
+      const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+      if (!currentUser.id) {
+        alert("Bạn cần đăng nhập để tạo dự án!");
+        return;
+      }
+
+      const payload = {
+        user_id: currentUser.id,
+        name: project.ten_du_an || "Dự án chưa đặt tên",
+        description: project.mo_ta || "",
+        status: "active",
+        color_code: "#F59E0B" // Cam default
+      };
+
+      const response = await axios.post("http://localhost:3000/api/projects", payload);
       alert("Tạo dự án thành công!");
       console.log(response.data);
     } catch (error) {

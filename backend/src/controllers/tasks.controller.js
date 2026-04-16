@@ -1,9 +1,10 @@
-﻿const tasks = require("../models/tasks.model");
+const tasks = require("../models/tasks.model");
 
 module.exports = {
  getAll: async (req, res) => {
     try {
-      const data = await tasks.getAll();
+      const userId = req.query.userId;
+      const data = await tasks.getAll(userId);
       res.json(data || []); // Luôn đảm bảo trả về mảng để Frontend không bị lỗi .filter()
     } catch (err) {
       console.error("Lỗi Controller getAll tasks:", err);

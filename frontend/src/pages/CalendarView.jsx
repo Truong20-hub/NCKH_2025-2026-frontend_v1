@@ -23,8 +23,11 @@ const CalendarView = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
 
   useEffect(() => {
+    const currentUser = JSON.parse(localStorage.getItem("user"));
+    const userId = currentUser ? currentUser.id : "";
+    
     // Gọi API từ bảng Tasks
-    fetch("http://localhost:3000/api/tasks")
+    fetch(`http://localhost:3000/api/tasks${userId ? `?userId=${userId}` : ""}`)
       .then((res) => res.json())
       .then((data) => {
         if (!Array.isArray(data)) return;

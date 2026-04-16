@@ -1,9 +1,20 @@
-﻿const db = require("../common/db");
+const db = require("../common/db");
 
 const tasks = {
   // Lấy tất cả danh sách công việc
-  getAll: async () => {
-    const [rows] = await db.query("SELECT * FROM tasks");
+  getAll: async (userId) => {
+    if (!userId) {
+      const [rows] = await db.query("SELECT * FROM tasks");
+      return rows;
+    }
+    const query = `
+      SELECT DISTINCT t.* 
+      FROM tasks t
+      LEFT JOIN projects p ON t.project_id = p.id
+      LEFT JOIN goals g ON t.goal_id = g.id
+      WHERE p.user_id = ? OR g.user_id = ?
+    `;
+    const [rows] = await db.query(query, [userId, userId]);
     return rows;
   },
 
