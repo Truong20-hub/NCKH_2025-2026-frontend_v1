@@ -12,6 +12,7 @@ app.use(express.urlencoded({ extended: true }));
 
 const ai_suggestionsRouter = require('./routes/ai_suggestions.route');
 const goalsRouter = require('./routes/goals.route');
+const projectRouter = require('./routes/projects.route');
 const notificationsRouter = require('./routes/notifications.route');
 const progress_logsRouter = require('./routes/progress_logs.route');
 const schedulesRouter = require('./routes/schedules.route');
@@ -21,6 +22,7 @@ const usersRouter = require('./routes/users.route');
 
 app.use('/api/ai_suggestions', ai_suggestionsRouter);
 app.use('/api/goals', goalsRouter);
+app.use('/api/projects', projectRouter);
 app.use('/api/notifications', notificationsRouter);
 app.use('/api/progress_logs', progress_logsRouter);
 app.use('/api/schedules', schedulesRouter);
