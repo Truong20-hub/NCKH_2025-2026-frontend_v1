@@ -22,7 +22,6 @@ export default function Login() {
       if (response.ok) {
         localStorage.setItem("isLogin", "true");
         localStorage.setItem("user", JSON.stringify(result.user));
-
         localStorage.setItem("userId", result.user.id);
 
         alert("Chào mừng " + result.user.username + " quay trở lại!");
@@ -44,21 +43,14 @@ export default function Login() {
             <Zap size={24} fill="currentColor" />
           </div>
           <h1 className="font-extrabold text-2xl text-gray-900">TaskAI</h1>
-          <p className="text-gray-500 text-sm mt-2 text-center">
-            Chào mừng bạn quay trở lại!
-          </p>
+          <p className="text-gray-500 text-sm mt-2 text-center">Chào mừng bạn quay trở lại!</p>
         </div>
 
         <form className="space-y-5" onSubmit={handleLogin}>
           <div>
-            <label className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 block">
-              Email
-            </label>
+            <label className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 block">Email</label>
             <div className="relative">
-              <Mail
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                size={18}
-              />
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
               <input
                 type="email"
                 required
@@ -71,14 +63,9 @@ export default function Login() {
           </div>
 
           <div>
-            <label className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 block">
-              Mật khẩu
-            </label>
+            <label className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 block">Mật khẩu</label>
             <div className="relative">
-              <Lock
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                size={18}
-              />
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
               <input
                 type="password"
                 required

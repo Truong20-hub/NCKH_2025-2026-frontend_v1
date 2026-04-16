@@ -10,12 +10,17 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  // Giả sử ID người dùng hiện tại là 1
-  const userId = 1;
+  // Lấy ID người dùng hiện tại từ localStorage
+  const currentUser = JSON.parse(localStorage.getItem("user"));
+  const userId = currentUser ? currentUser.id : null;
 
   // Lấy dữ liệu từ Backend khi load trang
   useEffect(() => {
-    fetch(`http://localhost:5000/api/users/${userId}`)
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
+    fetch(`http://localhost:3000/api/users/${userId}`)
       .then((res) => res.json())
       .then((data) => {
         if (data && data.length > 0) {
@@ -32,7 +37,7 @@ const Profile = () => {
   const handleUpdate = async () => {
     setSaving(true);
     try {
-      const response = await fetch(`http://localhost:5000/api/users/${userId}`, {
+      const response = await fetch(`http://localhost:3000/api/users/${userId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(userData),
@@ -60,7 +65,10 @@ const Profile = () => {
           <div className="relative group">
             <div className="w-32 h-32 rounded-full bg-gray-200 overflow-hidden border-4 border-white shadow-md">
               <img
-                src={userData.avatar_url || `https://ui-avatars.com/api/?name=${userData.fullname || 'User'}&background=0D8ABC&color=fff&size=128`}
+                src={
+                  userData.avatar_url ||
+                  `https://ui-avatars.com/api/?name=${userData.fullname || "User"}&background=0D8ABC&color=fff&size=128`
+                }
                 alt="Profile"
                 className="w-full h-full object-cover"
               />
@@ -71,8 +79,8 @@ const Profile = () => {
           </div>
           <h2 className="mt-4 font-bold text-lg text-gray-800">{userData.fullname || "Chưa đặt tên"}</h2>
           <p className="text-sm text-gray-500 italic">Thành viên hệ thống</p>
-          
-          <button 
+
+          <button
             onClick={handleUpdate}
             disabled={saving}
             className="mt-6 w-full py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"

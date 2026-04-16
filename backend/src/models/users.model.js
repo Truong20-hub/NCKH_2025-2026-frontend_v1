@@ -1,76 +1,87 @@
-﻿const users = require("../models/users.model");
 const db = require("../common/db");
 
 module.exports = {
-  getAll: (req, res) => {
-    users.getAll((result) => {
-      if (!result) return res.status(500).send({ message: "Lỗi Server" });
-      res.send(result);
-    });
+  getAll: async (callback) => {
+    try {
+      const [rows] = await db.query("SELECT id, username, email, full_name as fullname FROM users");
+      callback(rows);
+    } catch (err) {
+      console.error("Lỗi getAll:", err);
+      callback(null);
+    }
   },
 
-  getById: (req, res) => {
-    const id = req.params.id;
-    users.getById(id, (result) => {
-      if (!result || result.length === 0) {
-        return res.status(404).send({ message: "Không tìm thấy người dùng" });
-      }
-      res.send(result);
-    });
+  getById: async (id, callback) => {
+    try {
+      const [rows] = await db.query("SELECT id, username, email, full_name as fullname FROM users WHERE id = ?", [id]);
+      callback(rows);
+    } catch (err) {
+      console.error("Lỗi getById:", err);
+      callback(null);
+    }
   },
 
   insert: async (data, callback) => {
     const sql = "INSERT INTO users (username, email, password, full_name) VALUES (?, ?, ?, ?)";
     try {
-      const [result] = await db.query(sql, [
-        data.username,
-        data.email,
-        data.password,
-        data.full_name,
-      ]);
-      callback(result); 
+      const [result] = await db.query(sql, [data.username, data.email, data.password, data.full_name]);
+      callback(result);
     } catch (err) {
       console.error("Lỗi SQL Insert:", err);
-      callback(null); // Thất bại trả về null
+      callback(null);
     }
   },
-  update: (data, id, callback) => {
-    const query =
-      "UPDATE users SET username = ?, email = ?, password = ?, full_name = ? WHERE id = ?";
-    db.query(
-      query,
-      [data.username, data.email, data.password, data.full_name, id],
-      (err, result) => {
-        if (err) {
-          console.error("Lỗi Query UPDATE:", err);
-          return callback(null);
-        }
-        callback(result);
-      },
-    );
-  },
 
-  delete: (id, callback) => {
-    const query = "DELETE FROM users WHERE id = ?";
-    db.query(query, [id], (err, result) => {
-      if (err) {
-        console.error("Lỗi Query DELETE:", err);
-        return callback(null);
-      }
+  update: async (data, id, callback) => {
+    const fields = [];
+    const values = [];
+
+    if (data.username) {
+      fields.push("username = ?");
+      values.push(data.username);
+    }
+    if (data.email) {
+      fields.push("email = ?");
+      values.push(data.email);
+    }
+    if (data.password) {
+      fields.push("password = ?");
+      values.push(data.password);
+    }
+    if (data.fullname || data.full_name) {
+      fields.push("full_name = ?");
+      values.push(data.fullname || data.full_name);
+    }
+
+    if (fields.length === 0) return callback({ message: "Không có dữ liệu cập nhật" });
+
+    const query = `UPDATE users SET ${fields.join(", ")} WHERE id = ?`;
+    values.push(id);
+
+    try {
+      const [result] = await db.query(query, values);
       callback(result);
-    });
+    } catch (err) {
+      console.error("Lỗi Query UPDATE:", err);
+      callback(null);
+    }
   },
 
-  delete: (req, res) => {
-    const id = req.params.id;
-    users.delete(id, (result) => {
-      res.send({ message: "Đã xóa người dùng", result });
-    });
+  delete: async (id, callback) => {
+    const query = "DELETE FROM users WHERE id = ?";
+    try {
+      const [result] = await db.query(query, [id]);
+      callback(result);
+    } catch (err) {
+      console.error("Lỗi Query DELETE:", err);
+      callback(null);
+    }
   },
+
   findByEmail: async (email, callback) => {
     try {
       const [results] = await db.query("SELECT * FROM users WHERE email = ?", [email]);
-      callback(results[0]); // Trả về user đầu tiên hoặc undefined
+      callback(results[0]);
     } catch (err) {
       console.error("Lỗi findByEmail:", err);
       callback(null);
