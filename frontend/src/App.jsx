@@ -14,7 +14,7 @@ import Projects from "./pages/Projects.jsx";
 import CalendarView from "./pages/CalendarView.jsx";
 import Announce from "./pages/Announce.jsx";
 import CreateProject from "./pages/AddProject.jsx";
-import ProjectDetail from "./pages/projectDetail.jsx";
+import ProjectDetail from "./pages/ProjectDetail.jsx";
 import SettingsPage from "./pages/setting.jsx";
 
 function App() {
@@ -41,7 +41,7 @@ function App() {
           <Route path="calendar" element={<CalendarView />} />
           <Route path="announce" element={<Announce />} />
           <Route path="create-project" element={<CreateProject />} />
-          <Route path="project-detail" element={<ProjectDetail />} />
+          <Route path="projects/:id" element={<ProjectDetail />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
 

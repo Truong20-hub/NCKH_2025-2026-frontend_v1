@@ -5,13 +5,15 @@ import LoginChild from "../pages/LoginChild";
 
 const Header = () => {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const [isProfileOpen, setIsProfileOpen] = useState(false); // Quản lý đóng mở Profile menu
-  const [user, setUser] = useState({ fullname: "Người dùng", avatar: "" });
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+  const [user, setUser] = useState({ username: "Guest", fullname: "", avatar: "" });
 
   useEffect(() => {
     const savedUser = JSON.parse(localStorage.getItem("user"));
     if (savedUser) {
       setUser({
+        username: savedUser.username, 
         fullname: savedUser.fullname,
         avatar: savedUser.avatar_url,
       });
@@ -57,7 +59,7 @@ const Header = () => {
         >
           <div className="text-right hidden sm:block">
             <p className="text-sm font-bold text-gray-800 group-hover:text-blue-600">
-              {user.fullname}
+              {user.username}
             </p>
             <p className="text-[10px] text-emerald-500 font-bold">Gói Pro</p>
           </div>

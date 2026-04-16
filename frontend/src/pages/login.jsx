@@ -21,12 +21,14 @@ export default function Login() {
 
       if (response.ok) {
         localStorage.setItem("isLogin", "true");
-        // Lưu thông tin thật từ Database trả về
         localStorage.setItem("user", JSON.stringify(result.user));
-        alert("Chào mừng " + result.user.fullname + " quay trở lại!");
+
+        localStorage.setItem("userId", result.user.id);
+
+        alert("Chào mừng " + result.user.username + " quay trở lại!");
         navigate("/");
       } else {
-        alert(result.message);
+        alert("Lỗi đăng nhập: " + (result.message || "Không xác định"));
       }
     } catch (error) {
       alert("Lỗi kết nối Server!");
