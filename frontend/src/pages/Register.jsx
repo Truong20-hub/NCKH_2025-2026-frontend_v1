@@ -1,97 +1,139 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Zap } from "lucide-react";
+import { Zap, User, Mail, Lock } from "lucide-react";
 
 export default function Register() {
   const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
 
-    // sau này có thể gọi API register
-    console.log("Đăng ký thành công");
+    if (formData.password !== formData.confirmPassword) {
+      return alert("Mật khẩu xác nhận không khớp!");
+    }
 
-    navigate("/login");
+    try {
+      // Sửa PORT thành 3000 và thêm /users/ vào URL
+      const response = await fetch("http://localhost:3000/api/users/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          full_name: formData.name, // Khớp với biến full_name trong Controller
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        alert("Đăng ký thành công!");
+        navigate("/login");
+      } else {
+        // Hiển thị lỗi từ Backend (ví dụ: "Mật khẩu quá yếu" hoặc "Email tồn tại")
+        alert("Lỗi: " + result.message);
+      }
+    } catch (error) {
+      alert("Không thể kết nối với Backend");
+      console.error("Lỗi khi kết nối Backend:", error);
+    }
   };
 
   return (
-    <div className="w-screen h-screen bg-gray-50 flex justify-center items-center">
-      {/* Card register */}
-      <div className="w-[380px] bg-white rounded-2xl shadow-lg p-6">
-        {/* Logo */}
-        <div className="flex justify-center items-center gap-2 mb-4">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white">
-            <Zap size={18} fill="currentColor" />
-          </div>
-          <h1 className="font-bold text-xl text-blue-600">TaskAI</h1>
-        </div>
-
-        {/* Title */}
-        <div className="text-center mb-6">
-          <div className="text-lg font-bold">Tạo tài khoản mới</div>
-
-          <p className="text-gray-500 text-sm mt-1">
-            Đăng ký để bắt đầu quản lý công việc của bạn.
+    <div className="w-screen h-screen bg-[#F8FAFC] flex justify-center items-center">
+      <div className="w-full max-w-[420px] bg-white rounded-3xl shadow-xl shadow-blue-100/50 p-8 border border-gray-100">
+        <div className="text-center mb-8">
+          <h1 className="font-extrabold text-2xl text-gray-900">
+            Bắt đầu với TaskAI
+          </h1>
+          <p className="text-gray-500 text-sm mt-2">
+            Nâng cao hiệu suất công việc với AI
           </p>
         </div>
 
-        {/* Form */}
-        <form className="flex flex-col gap-4" onSubmit={handleRegister}>
-          <div className="flex flex-col">
-            <label className="text-sm font-medium mb-1">Tên</label>
-            <input
-              type="text"
-              placeholder="Nhập tên của bạn"
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div className="flex flex-col">
-            <label className="text-sm font-medium mb-1">Email</label>
-            <input
-              type="email"
-              placeholder="Nhập email"
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div className="flex flex-col">
-            <label className="text-sm font-medium mb-1">Mật khẩu</label>
-            <input
-              type="password"
-              placeholder="Nhập mật khẩu"
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div className="flex flex-col">
-            <label className="text-sm font-medium mb-1">
-              Xác nhận mật khẩu
-            </label>
-            <input
-              type="password"
-              placeholder="Nhập lại mật khẩu"
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+        <form className="space-y-4" onSubmit={handleRegister}>
+          <div className="grid grid-cols-1 gap-4">
+            <div>
+              <label className="text-xs font-bold text-gray-700 uppercase mb-1 block">
+                Tên đầy đủ
+              </label>
+              <input
+                type="text"
+                required
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                placeholder="Nguyen Van A"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-bold text-gray-700 uppercase mb-1 block">
+                Email
+              </label>
+              <input
+                type="email"
+                required
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                placeholder="name@company.com"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-bold text-gray-700 uppercase mb-1 block">
+                Mật khẩu
+              </label>
+              <input
+                type="password"
+                required
+                onChange={(e) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                placeholder="Tối thiểu 8 ký tự"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-bold text-gray-700 uppercase mb-1 block">
+                Xác nhận mật khẩu
+              </label>
+              <input
+                type="password"
+                required
+                onChange={(e) =>
+                  setFormData({ ...formData, confirmPassword: e.target.value })
+                }
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                placeholder="Nhập lại mật khẩu"
+              />
+            </div>
           </div>
 
           <button
             type="submit"
-            className="bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 active:scale-95 transition"
+            className="w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold hover:bg-blue-700 transition-all mt-4 shadow-lg shadow-blue-200"
           >
-            Đăng ký
+            Tạo tài khoản
           </button>
         </form>
 
-        {/* Login */}
-        <div className="text-center text-sm text-gray-500 mt-6">
-          Bạn đã có tài khoản?{" "}
+        <p className="text-center text-sm text-gray-500 mt-6">
+          Đã có tài khoản?{" "}
           <span
             onClick={() => navigate("/login")}
-            className="text-blue-600 font-medium cursor-pointer hover:underline"
+            className="text-blue-600 font-bold cursor-pointer hover:underline"
           >
             Đăng nhập
           </span>
-        </div>
+        </p>
       </div>
     </div>
   );

@@ -7,8 +7,6 @@ import {
   Layout,
   Trash2,
   Info,
-  AlertCircle,
-  Plus,
   Repeat,
   Upload,
   FileText,
@@ -23,6 +21,7 @@ const GoalsConfig = () => {
   const [selectedProjectId, setSelectedProjectId] = useState(1);
   const [isRepeating, setIsRepeating] = useState(true);
   const [sessions, setSessions] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const daysOfWeekMap = [
     { id: 0, label: "CN" },
@@ -33,6 +32,45 @@ const GoalsConfig = () => {
     { id: 5, label: "T6" },
     { id: 6, label: "T7" },
   ];
+
+  // --- LOGIC XỬ LÝ API (KẾT NỐI BACKEND) ---
+  const handleConfirmSchedule = async () => {
+    if (sessions.length === 0) {
+      alert("Vui lòng thêm ít nhất một phiên làm việc!");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      // Chuyển đổi từng session thành một task để lưu vào database
+      const promises = sessions.map((session) => {
+        const taskData = {
+          goal_id: selectedProjectId,
+          title: `Học tập: ${session.dayLabel}`,
+          description: `Phiên làm việc dự kiến từ ${session.start} đến ${session.end}`,
+          estimated_minutes: 120, // Mặc định 2 tiếng
+          priority: "NORMAL",
+          due_date: session.date,
+          is_completed: 0,
+        };
+
+        return fetch("http://localhost:5000/api/tasks", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(taskData),
+        });
+      });
+
+      await Promise.all(promises);
+      alert("Đã xác nhận và lưu lộ trình vào danh sách công việc thành công!");
+      setSessions([]); // Reset sau khi lưu thành công
+    } catch (error) {
+      console.error("Lỗi khi lưu lộ trình:", error);
+      alert("Không thể kết nối với Server. Quynh kiểm tra lại Backend nhé!");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   // --- LOGIC XỬ LÝ EXCEL ---
   const handleFileUpload = (e) => {
@@ -107,13 +145,11 @@ const GoalsConfig = () => {
     return [...sessions].sort((a, b) => new Date(a.date) - new Date(b.date));
   }, [sessions]);
 
-  // Giải quyết lỗi "declared but never read" bằng cách sử dụng biến này để highlight lịch
   const highlightedDates = useMemo(
     () => sessions.map((s) => s.date),
     [sessions],
   );
 
-  // Tạo dữ liệu cho Mini Calendar dựa trên tháng của startDate
   const calendarDays = useMemo(() => {
     const date = new Date(startDate);
     const year = date.getFullYear();
@@ -132,7 +168,7 @@ const GoalsConfig = () => {
   }, [startDate]);
 
   return (
-    <div className="max-w-[1400px] mx-auto animate-in fade-in">
+    <div className="max-w-[1400px] mx-auto animate-in fade-in p-6">
       <header className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4 border-b pb-6">
         <div>
           <h2 className="text-3xl font-bold text-gray-900 tracking-tight">
@@ -145,8 +181,8 @@ const GoalsConfig = () => {
               onChange={(e) => setSelectedProjectId(Number(e.target.value))}
               className="text-xs font-bold text-slate-600 bg-transparent outline-none cursor-pointer"
             >
-              <option value={1}>Dự án hiện tại</option>
-              <option value={2}>Dự án Marketing</option>
+              <option value={1}>Dự án Tiếng Nhật N4</option>
+              <option value={2}>Đồ án Tốt nghiệp</option>
             </select>
           </div>
         </div>
@@ -170,7 +206,6 @@ const GoalsConfig = () => {
               className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 font-bold text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
             />
 
-            {/* Mini Calendar Visual - Sử dụng highlightedDates ở đây */}
             <div className="pt-2">
               <p className="text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-wider">
                 Trạng thái tháng hiện tại
@@ -181,7 +216,6 @@ const GoalsConfig = () => {
                   return (
                     <div
                       key={day.isoDate}
-                      title={day.isoDate}
                       className={`h-7 rounded-lg text-[10px] flex items-center justify-center transition-all border
                         ${
                           isScheduled
@@ -214,7 +248,6 @@ const GoalsConfig = () => {
                   </button>
                   <button
                     onClick={() => spreadMonthly(day.id, day.label)}
-                    title="Rải lịch 4 tuần"
                     className="px-3 rounded-xl bg-slate-50 text-slate-400 hover:bg-emerald-500 hover:text-white transition-all border border-slate-100"
                   >
                     <Repeat size={14} />
@@ -224,17 +257,14 @@ const GoalsConfig = () => {
             </div>
           </div>
 
-          <div className="bg-emerald-50 p-6 rounded-3xl border border-emerald-100 border-dashed transition-all hover:bg-emerald-100/50">
+          <div className="bg-emerald-50 p-6 rounded-3xl border border-emerald-100 border-dashed">
             <h4 className="text-sm font-bold text-emerald-800 mb-3 flex items-center gap-2">
               <Upload size={18} /> Nhập từ Excel
             </h4>
-            <div className="group relative flex flex-col items-center justify-center w-full h-32 bg-white rounded-2xl border-2 border-dashed border-emerald-200 cursor-pointer hover:border-emerald-400 transition-all text-center px-4">
-              <FileText
-                className="text-emerald-300 mb-2 group-hover:scale-110 transition-transform"
-                size={32}
-              />
+            <div className="group relative flex flex-col items-center justify-center w-full h-32 bg-white rounded-2xl border-2 border-dashed border-emerald-200 cursor-pointer hover:border-emerald-400 transition-all text-center">
+              <FileText className="text-emerald-300 mb-2" size={32} />
               <span className="text-[10px] font-bold text-emerald-600">
-                Kéo thả file .xlsx vào đây
+                Kéo thả file .xlsx
               </span>
               <input
                 type="file"
@@ -248,81 +278,62 @@ const GoalsConfig = () => {
 
         {/* CỘT PHẢI: LIST PHIÊN */}
         <div className="col-span-12 lg:col-span-8 space-y-4">
-          <div className="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-            <h3 className="font-bold text-slate-800 flex items-center gap-2">
+          <div className="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-100">
+            <h3 className="font-bold text-slate-800">
               Lộ trình chi tiết{" "}
-              <span className="bg-blue-100 text-blue-600 px-3 py-0.5 rounded-full text-[10px]">
+              <span className="ml-2 bg-blue-100 text-blue-600 px-3 py-0.5 rounded-full text-[10px]">
                 {sessions.length} phiên
               </span>
             </h3>
-            <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 px-3 py-1.5 rounded-lg border">
+            <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase bg-slate-50 px-3 py-1.5 rounded-lg border">
               <Repeat size={12} /> Lặp lại tuần
               <input
                 type="checkbox"
                 checked={isRepeating}
                 onChange={(e) => setIsRepeating(e.target.checked)}
-                className="size-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                className="size-4 rounded text-blue-600 cursor-pointer"
               />
             </div>
           </div>
 
-          <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+          <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
             {sortedSessions.length > 0 ? (
               sortedSessions.map((session) => (
                 <div
                   key={session.id}
-                  className="bg-white p-4 rounded-2xl border border-slate-100 flex items-center gap-4 hover:border-blue-300 hover:shadow-md transition-all animate-in slide-in-from-right-4"
+                  className="bg-white p-4 rounded-2xl border border-slate-100 flex items-center gap-4 hover:border-blue-300 transition-all"
                 >
                   <div className="size-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center font-black text-xs shrink-0 border border-blue-100">
                     {session.dayLabel}
                   </div>
                   <div className="flex-1">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">
-                      Ngày thực hiện
-                    </p>
                     <input
                       type="date"
                       value={session.date}
                       onChange={(e) =>
-                        setSessions((prev) =>
-                          prev.map((s) =>
-                            s.id === session.id
-                              ? { ...s, date: e.target.value }
-                              : s,
-                          ),
-                        )
+                        updateTime(session.id, "date", e.target.value)
                       }
-                      className="bg-slate-50 border-none rounded-lg p-2 text-sm font-bold text-slate-700 outline-none w-full focus:ring-1 focus:ring-blue-500"
+                      className="bg-slate-50 border-none rounded-lg p-2 text-sm font-bold text-slate-700 outline-none w-full"
                     />
                   </div>
                   <div className="flex items-center gap-3 bg-slate-50 p-2 rounded-xl border border-slate-100">
-                    <div className="text-center px-1">
-                      <p className="text-[8px] font-bold text-slate-400 uppercase">
-                        Bắt đầu
-                      </p>
-                      <input
-                        type="time"
-                        value={session.start}
-                        onChange={(e) =>
-                          updateTime(session.id, "start", e.target.value)
-                        }
-                        className="bg-transparent text-xs font-bold w-16 outline-none text-slate-700"
-                      />
-                    </div>
+                    <input
+                      type="time"
+                      value={session.start}
+                      onChange={(e) =>
+                        updateTime(session.id, "start", e.target.value)
+                      }
+                      className="bg-transparent text-xs font-bold w-16 outline-none text-slate-700"
+                    />
                     <span className="text-slate-300">→</span>
-                    <div className="text-center px-1">
-                      <p className="text-[8px] font-bold text-slate-400 uppercase">
-                        Kết thúc
-                      </p>
-                      <input
-                        type="time"
-                        value={session.end}
-                        onChange={(e) =>
-                          updateTime(session.id, "end", e.target.value)
-                        }
-                        className="bg-transparent text-xs font-bold w-16 outline-none text-slate-700"
-                      />
-                    </div>
+                    <input
+                      type="time"
+                      value={session.end}
+                      onChange={(e) =>
+                        updateTime(session.id, "end", e.target.value)
+                      }
+                      className="bg-transparent text-xs font-bold w-16 outline-none text-slate-700"
+                    />
                   </div>
                   <button
                     onClick={() =>
@@ -330,25 +341,30 @@ const GoalsConfig = () => {
                         prev.filter((s) => s.id !== session.id),
                       )
                     }
-                    className="p-3 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                    className="p-3 text-slate-300 hover:text-red-500 rounded-xl transition-all"
                   >
                     <Trash2 size={18} />
                   </button>
                 </div>
               ))
             ) : (
-              <div className="flex flex-col items-center justify-center py-20 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200 text-slate-400">
-                <Info size={40} className="mb-4 opacity-20" />
-                <p className="font-medium text-sm">
-                  Chưa có dữ liệu. Vui lòng thêm ngày hoặc nhập file Excel.
+              <div className="text-center py-20 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200 text-slate-400">
+                <Info size={40} className="mx-auto mb-4 opacity-20" />
+                <p className="text-sm">
+                  Chưa có dữ liệu. Hãy thêm phiên làm việc mới, Quynh nhé!
                 </p>
               </div>
             )}
           </div>
 
           {sessions.length > 0 && (
-            <button className="w-full bg-slate-900 text-white py-5 rounded-3xl font-black shadow-2xl hover:bg-black transition-all flex items-center justify-center gap-3 transform active:scale-[0.98]">
-              <Check size={20} /> XÁC NHẬN LỘ TRÌNH DỰ ÁN
+            <button
+              onClick={handleConfirmSchedule}
+              disabled={isSubmitting}
+              className={`w-full ${isSubmitting ? "bg-gray-400" : "bg-slate-900 hover:bg-black"} text-white py-5 rounded-3xl font-black shadow-2xl transition-all flex items-center justify-center gap-3 transform active:scale-[0.98]`}
+            >
+              <Check size={20} />{" "}
+              {isSubmitting ? "ĐANG LƯU..." : "XÁC NHẬN LỘ TRÌNH DỰ ÁN"}
             </button>
           )}
         </div>
