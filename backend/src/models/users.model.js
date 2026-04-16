@@ -19,23 +19,21 @@ module.exports = {
     });
   },
 
-  insert: (data, callback) => {
-    // Phải khớp với các cột: username, email, password, full_name
-    const query =
-      "INSERT INTO users (username, email, password, full_name) VALUES (?, ?, ?, ?)";
-    db.query(
-      query,
-      [data.username, data.email, data.password, data.full_name],
-      (err, result) => {
-        if (err) {
-          console.error("Lỗi Query INSERT:", err); // Dòng này sẽ hiện lỗi ở terminal backend
-          return callback(null);
-        }
-        callback(result);
-      },
-    );
+  insert: async (data, callback) => {
+    const sql = "INSERT INTO users (username, email, password, full_name) VALUES (?, ?, ?, ?)";
+    try {
+      const [result] = await db.query(sql, [
+        data.username,
+        data.email,
+        data.password,
+        data.full_name,
+      ]);
+      callback(result); 
+    } catch (err) {
+      console.error("Lỗi SQL Insert:", err);
+      callback(null); // Thất bại trả về null
+    }
   },
-
   update: (data, id, callback) => {
     const query =
       "UPDATE users SET username = ?, email = ?, password = ?, full_name = ? WHERE id = ?";
@@ -69,12 +67,13 @@ module.exports = {
       res.send({ message: "Đã xóa người dùng", result });
     });
   },
-  // Thêm vào file models/users.model.js của Quynh
-  findByEmail: (email, callback) => {
-    const query = "SELECT * FROM users WHERE email = ?";
-    db.query(query, [email], (err, results) => {
-      if (err) return callback(null);
-      callback(results[0]);
-    });
+  findByEmail: async (email, callback) => {
+    try {
+      const [results] = await db.query("SELECT * FROM users WHERE email = ?", [email]);
+      callback(results[0]); // Trả về user đầu tiên hoặc undefined
+    } catch (err) {
+      console.error("Lỗi findByEmail:", err);
+      callback(null);
+    }
   },
 };

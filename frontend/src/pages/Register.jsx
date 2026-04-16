@@ -6,6 +6,7 @@ export default function Register() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
+    username: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -13,35 +14,40 @@ export default function Register() {
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    console.log("Form data submitted:", formData);
 
     if (formData.password !== formData.confirmPassword) {
-      return alert("Mật khẩu xác nhận không khớp!");
+      alert("Mật khẩu và xác nhận mật khẩu không khớp!");
+      return;
     }
 
     try {
-      // Sửa PORT thành 3000 và thêm /users/ vào URL
       const response = await fetch("http://localhost:3000/api/users/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: formData.email,
           password: formData.password,
-          full_name: formData.name, // Khớp với biến full_name trong Controller
+          full_name: formData.name,
+          username: formData.username,
         }),
       });
+      console.log("Response status:", response.status);
 
       const result = await response.json();
+      console.log("Kết quả từ server:", result);
 
       if (response.ok) {
         alert("Đăng ký thành công!");
         navigate("/login");
       } else {
-        // Hiển thị lỗi từ Backend (ví dụ: "Mật khẩu quá yếu" hoặc "Email tồn tại")
-        alert("Lỗi: " + result.message);
+        alert("Lỗi từ server: " + (result.message || "Không xác định"));
       }
     } catch (error) {
-      alert("Không thể kết nối với Backend");
-      console.error("Lỗi khi kết nối Backend:", error);
+      console.error("Lỗi kết nối:", error);
+      alert(
+        "Không thể kết nối đến máy chủ. Quynh kiểm tra xem Backend đã chạy chưa nhé!",
+      );
     }
   };
 
@@ -71,6 +77,20 @@ export default function Register() {
                 }
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                 placeholder="Nguyen Van A"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-bold text-gray-700 uppercase mb-1 block">
+                Biệt danh
+              </label>
+              <input
+                type="text"
+                required
+                onChange={(e) =>
+                  setFormData({ ...formData, username: e.target.value })
+                }
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                placeholder="Ví dụ: quynh_it"
               />
             </div>
             <div>
