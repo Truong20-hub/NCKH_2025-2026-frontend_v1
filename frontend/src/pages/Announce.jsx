@@ -1,5 +1,12 @@
 import React, { useEffect, useRef, useState, forwardRef } from "react";
-import { Building2, Bot, Settings2 } from "lucide-react";
+import {
+  Building2,
+  Bot,
+  Settings2,
+  BellOff,
+  CheckCircle2,
+  Clock,
+} from "lucide-react";
 
 const tabs = ["Tất cả", "Chưa đọc", "Quan trọng", "Lưu trữ"];
 
@@ -7,8 +14,8 @@ const ButtonTab = forwardRef(({ label, active, onClick }, ref) => (
   <button
     ref={ref}
     onClick={onClick}
-    className={`h-10 px-4 transition-colors duration-200 min-w-[100px]
-      ${active ? "text-blue-700 font-bold" : "text-gray-500 hover:text-black"} font-sans`}
+    className={`h-10 px-4 transition-all duration-200 min-w-[100px] relative
+      ${active ? "text-blue-600 font-bold" : "text-gray-500 hover:text-gray-900"} font-sans text-sm`}
   >
     {label}
   </button>
@@ -16,23 +23,61 @@ const ButtonTab = forwardRef(({ label, active, onClick }, ref) => (
 
 const Announce = () => {
   const [activeTab, setActiveTab] = useState(0);
-  const [announcements, setAnnouncements] = useState([]); 
+  const [announcements, setAnnouncements] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const buttonRef = useRef([]);
   const [indicatorStyle, setIndicatorStyle] = useState({});
 
-  // 1. Lấy dữ liệu từ Backend
   useEffect(() => {
     const fetchAnnouncements = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch("http://localhost:5000/api/announcements");
+        console.log("--- BẮT ĐẦU FETCH DỮ LIỆU ---");
+
+        const userStr = localStorage.getItem("user");
+        console.log("Dữ liệu 'user' lấy từ localStorage:", userStr);
+
+        if (!userStr) {
+          console.error("LỖI: localStorage không có key 'user'");
+          setIsLoading(false);
+          return;
+        }
+
+        const user = JSON.parse(userStr);
+        console.log("ID người dùng sau khi Parse:", user.id);
+
+        if (!user.id) {
+          console.error(
+            "LỖI: Object 'user' tồn tại nhưng không có thuộc tính 'id'",
+          );
+          setIsLoading(false);
+          return;
+        }
+
+        const apiUrl = `http://localhost:3000/api/notifications/user/${user.id}`;
+        console.log("Đang gọi API tại:", apiUrl);
+
+        const response = await fetch(apiUrl);
+        console.log("Response Status (Mã trạng thái):", response.status);
+
         const data = await response.json();
-        setAnnouncements(data); 
+        console.log("DỮ LIỆU NHẬN VỀ TỪ BACKEND:", data);
+
+        if (Array.isArray(data)) {
+          setAnnouncements(data);
+          console.log("Số lượng thông báo tìm thấy:", data.length);
+        } else {
+          console.warn(
+            "CẢNH BÁO: Dữ liệu trả về không phải là một mảng!",
+            data,
+          );
+          setAnnouncements([]);
+        }
       } catch (error) {
-        console.error("Lỗi khi lấy thông báo:", error);
+        console.error("LỖI KẾT NỐI NGHIÊM TRỌNG:", error);
       } finally {
         setIsLoading(false);
+        console.log("--- KẾT THÚC QUÁ TRÌNH FETCH ---");
       }
     };
     fetchAnnouncements();
@@ -46,22 +91,23 @@ const Announce = () => {
         width: el.offsetWidth,
       });
     }
-  }, [activeTab]);
+  }, [activeTab, announcements]);
 
-  // 2. Logic lọc dữ liệu dựa trên DB (is_read: 0 là chưa đọc, 1 là đã đọc)
-  const filteredData = announcements.filter(item => {
+  const filteredData = announcements.filter((item) => {
     const currentTab = tabs[activeTab];
     if (currentTab === "Tất cả") return true;
     if (currentTab === "Chưa đọc") return item.is_read === 0;
-    if (currentTab === "Quan trọng") return item.type === 'priority' || item.type === 'system';
+    if (currentTab === "Quan trọng")
+      return item.type === "priority" || item.type === "ai";
     return true;
   });
 
   return (
-    <div className="w-full h-screen flex bg-gray-50">
+    <div className="w-full h-screen flex bg-[#f8fafc]">
       <div className="w-[70%] p-6 overflow-hidden flex flex-col">
-        <div className="bg-white rounded-2xl shadow-sm p-6 h-full flex flex-col">
-          <div className="relative border-b border-gray-200 flex items-center gap-2">
+        <div className="bg-white rounded-3xl shadow-sm border border-slate-200 h-full flex flex-col overflow-hidden">
+          {/* TAB HEADER */}
+          <div className="px-6 pt-4 relative border-b border-slate-100 flex items-center">
             {tabs.map((tab, index) => (
               <ButtonTab
                 key={index}
@@ -72,60 +118,73 @@ const Announce = () => {
               />
             ))}
             <span
-              className="absolute bottom-[-1px] h-[2px] bg-blue-500 transition-all duration-300"
+              className="absolute bottom-0 h-0.5 bg-blue-600 transition-all duration-300 ease-out"
               style={indicatorStyle}
             />
           </div>
 
-          <div className="mt-6 flex-1 overflow-y-auto pr-2 space-y-4">
-            <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-              {isLoading ? "Đang tải dữ liệu..." : "Mới nhất"}
-            </h2>
-            
-            {!isLoading && filteredData.map((item) => (
-              <div key={item.id} className="bg-white border border-gray-100 rounded-2xl flex p-4 shadow-sm hover:shadow-md transition-shadow">
-                <div className="mr-4">
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                    item.type === 'project' ? 'bg-blue-100 text-blue-600' : 
-                    item.type === 'ai' ? 'bg-purple-100 text-purple-600' : 'bg-orange-100 text-orange-600'
-                  }`}>
-                    {item.type === 'project' ? <Building2 size={24}/> : item.type === 'ai' ? <Bot size={24}/> : <Settings2 size={24}/>}
-                  </div>
-                </div>
-                <div className="flex-1">
-                  <div className="flex justify-between items-start mb-1">
-                    <h4 className="font-bold text-gray-800">{item.title}</h4>
-                    {/* Hiển thị ngày tháng từ DB (created_at) */}
-                    <span className="text-xs text-gray-400">
-                      {new Date(item.created_at).toLocaleDateString("vi-VN")}
-                    </span>
-                  </div>
-                  {/* Sử dụng trường 'message' thay cho 'content' theo Model của bạn */}
-                  <p className="text-gray-600 text-sm mb-3">{item.message}</p>
-                  <div className="flex justify-end gap-2">
-                    <button className="text-xs font-bold px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50">Bỏ qua</button>
-                    <button className="text-xs font-bold px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Xem chi tiết</button>
-                  </div>
-                </div>
+          {/* CONTENT AREA */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-4">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest">
+                {tabs[activeTab]} ({filteredData.length})
+              </h2>
+            </div>
+
+            {isLoading ? (
+              <div className="text-center py-10 text-slate-400">
+                Đang tải thông báo...
               </div>
-            ))}
+            ) : filteredData.length > 0 ? (
+              filteredData.map((item) => (
+                <div
+                  key={item.id}
+                  className="p-4 border border-slate-100 rounded-2xl flex hover:bg-slate-50 transition-all"
+                >
+                  <div
+                    className={`w-12 h-12 rounded-xl flex items-center justify-center mr-4 ${item.type === "ai" ? "bg-purple-100 text-purple-600" : "bg-blue-100 text-blue-600"}`}
+                  >
+                    {item.type === "ai" ? (
+                      <Bot size={24} />
+                    ) : (
+                      <Building2 size={24} />
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex justify-between">
+                      <h4 className="font-bold text-slate-800">{item.title}</h4>
+                      <span className="text-xs text-slate-400">
+                        {new Date(item.created_at).toLocaleDateString("vi-VN")}
+                      </span>
+                    </div>
+                    <p className="text-slate-500 text-sm">{item.message}</p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center py-20 text-center">
+                <BellOff size={48} className="text-slate-300 mb-4" />
+                <h3 className="text-lg font-bold text-slate-700">
+                  Hết thông báo rồi!
+                </h3>
+                <p className="text-slate-400 text-sm">
+                  Quynh đã xử lý hết các cập nhật quan trọng.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* RIGHT SIDEBAR - Thống kê thực tế */}
-      <div className="w-[30%] p-6 space-y-6 overflow-y-auto">
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-          <h2 className="text-lg font-bold mb-4">Thống kê nhanh</h2>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center text-sm">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-blue-500"></span>Tổng số
-              </div>
-              <span className="bg-gray-100 px-2 py-0.5 rounded-full font-bold">
-                {announcements.length}
-              </span>
-            </div>
+      {/* RIGHT SIDEBAR */}
+      <div className="w-[30%] p-6">
+        <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+          <h2 className="text-lg font-bold text-slate-800 mb-4">Thống kê</h2>
+          <div className="bg-blue-50 p-4 rounded-2xl flex justify-between items-center">
+            <span className="text-sm font-medium">Tổng thông báo</span>
+            <span className="font-bold text-blue-600">
+              {announcements.length}
+            </span>
           </div>
         </div>
       </div>

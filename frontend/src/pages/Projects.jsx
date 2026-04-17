@@ -10,7 +10,6 @@ const Projects = () => {
   const navigate = useNavigate();
 
   const filterButtons = [
-    // Nếu trong DB lưu là 'active' thì id phải là 'active'
     { id: "planning", label: "Lập kế hoạch", icon: <Clock size={16} /> },
     { id: "active", label: "Đang chạy", icon: <Clock size={16} /> }, // Sửa in_progress thành active
     { id: "completed", label: "Hoàn thành", icon: <CheckCircle2 size={16} /> },
@@ -24,7 +23,6 @@ const Projects = () => {
       if (!userId) return;
 
       try {
-        // Lưu ý: Kiểm tra cổng 3000 hoặc 5000 cho đúng với Backend của bạn
         const res = await axios.get(
           `http://localhost:3000/api/projects/user/${userId}`,
         );
@@ -38,7 +36,6 @@ const Projects = () => {
     fetchProjects();
   }, []);
 
-  // Lọc dự án theo tab đang chọn
   const filteredProjects = projects.filter((p) => p.status === filter);
 
   if (loading)
@@ -51,7 +48,7 @@ const Projects = () => {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
         <div>
           <h2 className="text-3xl font-bold text-gray-900 mb-1">
-            Dự án của tôi
+            Dự án
           </h2>
           <p className="text-gray-500 font-medium">
             Theo dõi tiến độ nghiên cứu

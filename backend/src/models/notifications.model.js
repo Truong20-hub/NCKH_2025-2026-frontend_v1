@@ -1,51 +1,42 @@
 ﻿const db = require("../common/db");
-const notifications = (notifications) => {
-  this.id = notifications.id;
-  this.user_id = notifications.user_id;
-  this.type = notifications.type;
-  this.title = notifications.title;
-  this.message = notifications.message;
-  this.is_read = notifications.is_read;
-  this.created_at = notifications.created_at;
-};
 
-notifications.getById = (id, callback) => {
-  const sqlString = "SELECT * FROM notifications WHERE id = ? ";
-  db.query(sqlString, [id], (err, result) => {
-    if (err) return callback(err);
-    callback(result[0]);
-  });
-};
+const notifications = {
+  // Lấy thông báo theo User ID - Giống hệt logic await của tasks
+  getByUserId: async (userId) => {
+    const query = "SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC";
+    const [rows] = await db.query(query, [userId]);
+    return rows;
+  },
 
-notifications.getAll = (callback) => {
-  const sqlString = "SELECT * FROM notifications ";
-  db.query(sqlString, (err, result) => {
-    if (err) return callback(err);
-    callback(result);
-  });
-};
+  // Lấy chi tiết 1 thông báo
+  getById: async (id) => {
+    const [rows] = await db.query("SELECT * FROM notifications WHERE id = ?", [id]);
+    return rows[0];
+  },
 
-notifications.insert = (notifications, callBack) => {
-  const sqlString = "INSERT INTO notifications SET ?";
-  db.query(sqlString, [notifications], (err, res) => {
-    if (err) return callBack(err);
-    callBack({ id : res.insertId, ...notifications });
-  });
-};
+  // Thêm mới thông báo
+  insert: async (data) => {
+    const [res] = await db.query("INSERT INTO notifications SET ?", [data]);
+    return { id: res.insertId, ...data };
+  },
 
-notifications.update = (notifications, id, callBack) => {
-  const sqlString = "UPDATE notifications SET ? WHERE id = ?";
-  db.query(sqlString, [notifications, id], (err, res) => {
-    if (err) return callBack(err);
-    callBack("Cập nhật notifications id = " + id + " thành công");
-  });
-};
+  // Cập nhật thông báo (Ví dụ đánh dấu đã đọc)
+  update: async (data, id) => {
+    await db.query("UPDATE notifications SET ? WHERE id = ?", [data, id]);
+    return `Cập nhật thành công thông báo ${id}`;
+  },
 
-notifications.delete = (id, callBack) => {
-  db.query("DELETE FROM notifications WHERE id = ?", [id], (err, res) => {
-    if (err) return callBack(err);
-    callBack("Xóa notifications id = " + id + " thành công");
-  });
+  // Xóa thông báo
+  delete: async (id) => {
+    await db.query("DELETE FROM notifications WHERE id = ?", [id]);
+    return `Xóa thành công thông báo ${id}`;
+  },
+
+  // Lấy tất cả (nếu cần dùng cho trang quản trị)
+  getAll: async () => {
+    const [rows] = await db.query("SELECT * FROM notifications ORDER BY created_at DESC");
+    return rows;
+  }
 };
 
 module.exports = notifications;

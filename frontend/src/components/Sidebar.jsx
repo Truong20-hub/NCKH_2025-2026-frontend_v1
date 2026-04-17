@@ -21,8 +21,8 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
 
   // Hàm đăng xuất
   const handleLogout = () => {
-    localStorage.removeItem("isLogin"); // xoá trạng thái đăng nhập
-    navigate("/login"); // chuyển về trang login
+    localStorage.removeItem("isLogin"); 
+    navigate("/login"); 
   };
 
   const menuItems = [
@@ -34,7 +34,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
     {
       path: "/projects",
       icon: <ClipboardList size={20} />,
-      label: "CÔNG VIỆC",
+      label: "Dự án",
     },
     { path: "/goals", icon: <Target size={20} />, label: "Mục tiêu" },
     { path: "/calendar", icon: <Calendar size={20} />, label: "Lịch" },

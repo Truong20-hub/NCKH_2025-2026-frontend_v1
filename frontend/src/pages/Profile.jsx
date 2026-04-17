@@ -56,7 +56,7 @@ const Profile = () => {
   if (loading) return <div className="p-10 text-center">Đang tải dữ liệu...</div>;
 
   return (
-    <div className="max-w-4xl mx-auto animate-in fade-in">
+    <div className="max-w-4xl mx-auto animate-in fade-in mt-10">
       <h1 className="text-3xl font-bold text-gray-900 mb-6">Cài đặt cá nhân</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

@@ -1,54 +1,40 @@
 ﻿const db = require("../common/db");
-const goals = function(goal) {
-  this.id = goal.id;
-  this.user_id = goal.user_id;
-  this.title = goal.title;
-  this.description = goal.description;
-  this.priority = goal.priority;
-  this.status = goal.status;
-  this.start_date = goal.start_date;
-  this.end_date = goal.end_date;
-  this.created_at = goal.created_at;
-  this.updated_at = goal.updated_at;
-};
+const goals = {
+  getByUserId: async (userId) => {
+    try {
+      const [rows] = await db.query(
+        "SELECT id, title FROM goals WHERE user_id = ?",
+        [userId],
+      );
+      return rows;
+    } catch (err) {
+      throw err;
+    }
+  },
+  getAll: async () => {
+    const [rows] = await db.query("SELECT * FROM goals");
+    return rows;
+  },
 
-goals.getById = (id, callback) => {
-  const sqlString = "SELECT * FROM goals WHERE id = ? ";
-  db.query(sqlString, [id], (err, result) => {
-    if (err) return callback(err);
-    callback(result[0]);
-  });
-};
+  getById: async (id) => {
+    const [rows] = await db.query("SELECT * FROM goals WHERE id = ?", [id]);
+    return rows[0];
+  },
 
-goals.getAll = (callback) => {
-  const sqlString = "SELECT * FROM goals ";
-  db.query(sqlString, (err, result) => {
-    if (err) return callback(err);
-    callback(result);
-  });
-};
+  insert: async (data) => {
+    // data nên là object { user_id, title, description, ... }
+    const [res] = await db.query("INSERT INTO goals SET ?", [data]);
+    return { id: res.insertId, ...data };
+  },
 
-goals.insert = (goals, callBack) => {
-  const sqlString = "INSERT INTO goals SET ?";
-  db.query(sqlString, [goals], (err, res) => {
-    if (err) return callBack(err);
-    callBack({ id : res.insertId, ...goals });
-  });
-};
+  update: async (data, id) => {
+    await db.query("UPDATE goals SET ? WHERE id = ?", [data, id]);
+    return `Cập nhật mục tiêu id = ${id} thành công`;
+  },
 
-goals.update = (goals, id, callBack) => {
-  const sqlString = "UPDATE goals SET ? WHERE id = ?";
-  db.query(sqlString, [goals, id], (err, res) => {
-    if (err) return callBack(err);
-    callBack("Cập nhật goals id = " + id + " thành công");
-  });
+  delete: async (id) => {
+    await db.query("DELETE FROM goals WHERE id = ?", [id]);
+    return `Xóa mục tiêu id = ${id} thành công`;
+  },
 };
-
-goals.delete = (id, callBack) => {
-  db.query("DELETE FROM goals WHERE id = ?", [id], (err, res) => {
-    if (err) return callBack(err);
-    callBack("Xóa goals id = " + id + " thành công");
-  });
-};
-
 module.exports = goals;

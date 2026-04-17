@@ -1,16 +1,18 @@
 ﻿const express = require('express');
-const controller = require('../controllers/goals.controller');
+const goalsController = require("../controllers/goals.controller");
 const router = express.Router();
 
 // Lấy danh sách tất cả
-router.get('/', controller.getAll);
+router.get('/', goalsController.getAll);
 // Lấy chi tiết theo ID
-router.get('/:id', controller.getById);
+router.get('/:id', goalsController.getById);
 // Thêm mới
-router.post('/', controller.insert);
+router.post('/', goalsController.insert);
 // Cập nhật theo ID
-router.put('/:id', controller.update);
+router.put('/:id', goalsController.update);
 // Xóa theo ID
-router.delete('/:id', controller.delete);
+router.delete('/:id', goalsController.delete);
+
+router.get("/user/:userId", goalsController.getByUser);
 
 module.exports = router;

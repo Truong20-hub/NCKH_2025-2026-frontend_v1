@@ -1,4 +1,5 @@
 const projects = require("../models/projects.model");
+const goals = require("../models/goals.model");
 
 module.exports = {
   // Lấy tất cả dự án
@@ -26,17 +27,14 @@ module.exports = {
   getProjectsByUser: async (req, res) => {
     try {
       const userId = req.params.userId;
-      console.log(">>> [Controller] Đang lấy dự án cho UserId:", userId); // LOG 1
 
       const data = await projects.getByUserId(userId);
-
-      console.log(">>> [Controller] Dữ liệu từ Model trả về:", data); // LOG 2
 
       if (!data || data.length === 0) {
         console.warn(
           ">>> [Controller] Chú ý: Không tìm thấy dự án nào trong DB.",
         );
-        return res.json([]); // Trả về mảng rỗng để React không bị loading mãi
+        return res.json([]);
       }
 
       res.json(data);
@@ -48,10 +46,34 @@ module.exports = {
 
   insert: async (req, res) => {
     try {
-      const result = await projects.insert(req.body);
+      let { idGoal, newGoalName, user_id, ...projectData } = req.body;
+
+      // 2. Logic xử lý mục tiêu mới
+      if (newGoalName && newGoalName.trim() !== "") {
+        const goalResult = await goals.insert({
+          title: newGoalName,
+          user_id: user_id,
+          status: "planning",
+          priority: "medium",
+        });
+
+        console.log("Đã tạo mục tiêu mới với ID:", goalResult.id);
+      }
+
+      // 3. Gom dữ liệu cuối cùng để chèn vào bảng projects
+      const finalData = {
+        name: projectData.name,
+        description: projectData.description,
+        status: projectData.status || "active",
+        color_code: projectData.color_code || "#F59E0B",
+        user_id: user_id,
+      };
+
+      const result = await projects.insert(finalData);
       res.status(201).json(result);
     } catch (err) {
-      res.status(500).json({ message: "Lỗi thêm dự án" });
+      console.error("Lỗi insert project:", err);
+      res.status(500).json({ message: "Lỗi thêm dự án", error: err.message });
     }
   },
 
